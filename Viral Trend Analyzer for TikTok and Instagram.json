@@ -1,0 +1,926 @@
+{
+  "name": "Viral Trend Analyzer for TikTok and Instagram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "5231e8aa-2836-4d4e-a280-e460a2075efc",
+      "name": "Daily Trigger (08:00)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -4656,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "apifyToken",
+              "value": "={{ $env.APIFY_TOKEN }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "minViews",
+              "value": 10000,
+              "type": "number"
+            },
+            {
+              "id": "id-3",
+              "name": "minEngagementRate",
+              "value": 0.05,
+              "type": "number"
+            },
+            {
+              "id": "id-4",
+              "name": "superViralThreshold",
+              "value": 0.15,
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "maxAgeHours",
+              "value": 24,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "70f24eef-9c19-462f-b1d2-2d6ea185ce35",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4448,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "nicheKeywords",
+              "value": "<__PLACEHOLDER_VALUE__Niche keywords (e.g., 'fitness tips', 'productivity hacks')__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "hashtags",
+              "value": "<__PLACEHOLDER_VALUE__Hashtags to search (e.g., '#fitness #workout')__>",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "languages",
+              "value": "en",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "timeWindow",
+              "value": "24h",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "18fd0418-6896-409e-aa55-2ff3058e003a",
+      "name": "Search Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4240,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "<__PLACEHOLDER_VALUE__Apify TikTok scraper API endpoint__>",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration').first().json.apifyToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywords\": \"{{ $('Search Config').first().json.nicheKeywords }}\",\n  \"hashtags\": \"{{ $('Search Config').first().json.hashtags }}\",\n  \"timeWindow\": \"{{ $('Search Config').first().json.timeWindow }}\"\n}",
+        "options": {}
+      },
+      "id": "40ed5f6d-e32d-4162-b533-d0cf820063ea",
+      "name": "Scrape TikTok",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3984,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "<__PLACEHOLDER_VALUE__Apify Instagram Reels scraper API endpoint__>",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $('Workflow Configuration').first().json.apifyToken }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"keywords\": \"{{ $('Search Config').first().json.nicheKeywords }}\",\n  \"hashtags\": \"{{ $('Search Config').first().json.hashtags }}\",\n  \"timeWindow\": \"{{ $('Search Config').first().json.timeWindow }}\"\n}",
+        "options": {}
+      },
+      "id": "24c84cdd-6e74-4087-9fb1-22e0c068d2b3",
+      "name": "Scrape Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3984,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "platform",
+              "value": "tiktok",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "video_url",
+              "value": "={{ $json.videoUrl || $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "author",
+              "value": "={{ $json.authorName || $json.author }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "views",
+              "value": "={{ $json.playCount || $json.views || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "likes",
+              "value": "={{ $json.diggCount || $json.likes || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-6",
+              "name": "comments",
+              "value": "={{ $json.commentCount || $json.comments || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-7",
+              "name": "shares",
+              "value": "={{ $json.shareCount || $json.shares || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-8",
+              "name": "posted_at",
+              "value": "={{ $json.createTime || $json.postedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "id-9",
+              "name": "caption",
+              "value": "={{ $json.text || $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "id-10",
+              "name": "thumbnail_url",
+              "value": "={{ $json.covers?.[0] || $json.thumbnail }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "87ca318a-03d6-423e-bc99-bfa1755557a2",
+      "name": "Normalize TikTok Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3760,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "platform",
+              "value": "instagram",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "video_url",
+              "value": "={{ $json.url || $json.videoUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "author",
+              "value": "={{ $json.ownerUsername || $json.author }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "views",
+              "value": "={{ $json.videoViewCount || $json.views || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "likes",
+              "value": "={{ $json.likesCount || $json.likes || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-6",
+              "name": "comments",
+              "value": "={{ $json.commentsCount || $json.comments || 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "id-7",
+              "name": "shares",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "id-8",
+              "name": "posted_at",
+              "value": "={{ $json.timestamp || $json.postedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "id-9",
+              "name": "caption",
+              "value": "={{ $json.caption || $json.description }}",
+              "type": "string"
+            },
+            {
+              "id": "id-10",
+              "name": "thumbnail_url",
+              "value": "={{ $json.displayUrl || $json.thumbnail }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "f6d89925-cf60-416a-8d7e-1ab59d9b53da",
+      "name": "Normalize Instagram Results",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3760,
+        848
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c2b3c7cd-62ac-420d-a5dd-a6514b961723",
+      "name": "Combine Platforms",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -3488,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const minViews = $('Workflow Configuration').first().json.minViews;\nconst minEngagementRate = $('Workflow Configuration').first().json.minEngagementRate;\nconst maxAgeHours = $('Workflow Configuration').first().json.maxAgeHours;\n\nconst filtered = $input.all().filter(item => {\n  const data = item.json;\n  const views = data.views || 0;\n  const likes = data.likes || 0;\n  const comments = data.comments || 0;\n  const shares = data.shares || 0;\n  \n  // Calculate engagement rate\n  const engagementRate = views > 0 ? (likes + comments + shares) / views : 0;\n  \n  // Calculate age in hours\n  const postedAt = new Date(data.posted_at);\n  const now = new Date();\n  const ageHours = (now - postedAt) / (1000 * 60 * 60);\n  \n  // Apply filters\n  return views >= minViews && \n         ageHours <= maxAgeHours && \n         engagementRate >= minEngagementRate;\n}).map(item => {\n  // Add calculated fields\n  const data = item.json;\n  const views = data.views || 0;\n  const likes = data.likes || 0;\n  const comments = data.comments || 0;\n  const shares = data.shares || 0;\n  const engagementRate = views > 0 ? (likes + comments + shares) / views : 0;\n  \n  const postedAt = new Date(data.posted_at);\n  const now = new Date();\n  const ageHours = (now - postedAt) / (1000 * 60 * 60);\n  \n  return {\n    json: {\n      ...data,\n      engagement_rate: engagementRate,\n      age_hours: ageHours\n    }\n  };\n});\n\nreturn filtered;"
+      },
+      "id": "d0e705b0-a472-4ae0-852d-61d561f8c996",
+      "name": "Filter High-Growth Videos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3248,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "7217e83d-d71c-492a-8ea2-e4794476a434",
+      "name": "OpenAI GPT-4 Vision Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -3600,
+        1232
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "qOezWks7heW547ti",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this video thumbnail/first frame: {{ $json.thumbnail_url }}\n\nCaption: {{ $json.caption }}",
+        "options": {
+          "systemMessage": "You are a visual content analyst specializing in viral social media content.\n\nAnalyze the provided thumbnail/first frame image and caption. Return a JSON object with:\n- visual_hook: What visual element grabs attention (text, colors, composition, facial expression, etc.)\n- main_emotion: The primary emotion or vibe conveyed (excitement, curiosity, shock, humor, etc.)\n- formatting_pattern: Describe the visual formatting (text overlays, cuts, B-roll, effects, filters, etc.)\n\nBe specific and actionable in your analysis."
+        }
+      },
+      "id": "0df63422-4c79-41e8-88d1-b7979c92a212",
+      "name": "Analyze Visual Hook (GPT-4 Vision)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3504,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "d8eb8ad0-0220-4613-a2df-d7be69035a51",
+      "name": "OpenAI GPT-4 Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -3216,
+        1232
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "qOezWks7heW547ti",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Niche: {{ $('Search Config').first().json.nicheKeywords }}\n\nVideo Details:\n- Platform: {{ $json.platform }}\n- Caption: {{ $json.caption }}\n- Views: {{ $json.views }}\n- Likes: {{ $json.likes }}\n- Comments: {{ $json.comments }}\n- Shares: {{ $json.shares }}\n- Engagement Rate: {{ Math.round($json.engagement_rate * 10000) / 100 }}%\n\nVisual Analysis: {{ $('Analyze Visual Hook (GPT-4 Vision)').first().json.output }}",
+        "options": {
+          "systemMessage": "You are a viral content strategist and trend analyst.\n\nAnalyze the provided video data and visual analysis. Return a JSON object with:\n\n- summary: 2-3 sentence summary of the video content\n- why_it_works: Explain why this video is performing well (hook, timing, trend, emotion, format, etc.)\n- trend_type: Categorize the trend (sound/music, visual effect, hook structure, topic/theme, storytelling format)\n- adaptation_ideas: Array of 3-5 concrete, actionable ideas for adapting this trend to the user's niche\n- hook_examples: Array of 2-3 suggested opening lines or hooks inspired by this video\n- posting_angles: Array of 3-5 different angles to approach this trend (educational, story-based, controversial, value-driven, humorous, etc.)\n\nBe specific, actionable, and tailored to the niche. Focus on what can be replicated or adapted."
+        }
+      },
+      "id": "9e3760fa-2e0e-40ba-aef5-dd93ad4d36b0",
+      "name": "Analyze Trend & Adaptation (GPT-4)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -3152,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.engagement_rate }}",
+              "rightValue": "={{ $('Workflow Configuration').first().json.superViralThreshold }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a07c817d-6795-4e19-8203-74c89e02924c",
+      "name": "Check Super Viral Threshold",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2752,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "super_viral",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a8eaa5f4-dea0-4e3f-a4af-f03bc77ff797",
+      "name": "Mark as Super Viral",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2432,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "super_viral",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a51ac94c-09fa-4447-a90d-897b323b419d",
+      "name": "Mark as Normal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2432,
+        1376
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f2e8f354-17f5-4a89-a3e6-336b66ab8e5b",
+      "name": "Merge Viral Flags",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2096,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "<__PLACEHOLDER_VALUE__Google Sheets document ID__>"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "<__PLACEHOLDER_VALUE__Sheet name (e.g., 'Viral Opportunities')__>"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.format('yyyy-MM-dd') }}",
+            "platform": "={{ $json.platform }}",
+            "niche": "={{ $('Search Config').first().json.nicheKeywords }}",
+            "video_url": "={{ $json.video_url }}",
+            "author": "={{ $json.author }}",
+            "views": "={{ $json.views }}",
+            "likes": "={{ $json.likes }}",
+            "comments": "={{ $json.comments }}",
+            "shares": "={{ $json.shares }}",
+            "engagement_rate": "={{ $json.engagement_rate }}",
+            "ai_summary": "={{ $('Analyze Trend & Adaptation (GPT-4)').first().json.output?.summary }}",
+            "why_it_works": "={{ $('Analyze Trend & Adaptation (GPT-4)').first().json.output?.why_it_works }}",
+            "adaptation_ideas": "={{ JSON.stringify($('Analyze Trend & Adaptation (GPT-4)').first().json.output?.adaptation_ideas) }}",
+            "hook_examples": "={{ JSON.stringify($('Analyze Trend & Adaptation (GPT-4)').first().json.output?.hook_examples) }}",
+            "super_viral": "={{ $json.super_viral }}"
+          },
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "1c43039e-ba84-4cab-9a37-07fed6fdbf1a",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1904,
+        928
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "bFhfsO5dYdRTOWJu",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "ac3c6833-0d31-4c40-9b67-ce86cc6ca12d",
+      "name": "Select Top 5-10 Videos",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1904,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "sendTo": "<__PLACEHOLDER_VALUE__Recipient email address__>",
+        "subject": "=Daily Viral Content Opportunities – {{ $('Search Config').first().json.nicheKeywords }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }\n    h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }\n    h2 { color: #34495e; margin-top: 30px; }\n    .video-card { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 5px; }\n    .video-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin-bottom: 10px; }\n    .metrics { display: flex; gap: 20px; margin: 10px 0; flex-wrap: wrap; }\n    .metric { background: #fff; padding: 8px 12px; border-radius: 4px; font-size: 14px; }\n    .metric-label { font-weight: bold; color: #7f8c8d; }\n    .metric-value { color: #27ae60; font-weight: bold; }\n    .super-viral { background: #fff3cd; border-left-color: #ffc107; }\n    .super-viral-badge { background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; }\n    .section { margin: 15px 0; }\n    .section-title { font-weight: bold; color: #34495e; margin-bottom: 5px; }\n    .link { color: #3498db; text-decoration: none; }\n    .link:hover { text-decoration: underline; }\n    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #ecf0f1; color: #7f8c8d; font-size: 14px; }\n  </style>\n</head>\n<body>\n  <h1>🚀 Daily Viral Content Opportunities</h1>\n  <p><strong>Niche:</strong> {{ $('Search Config').first().json.nicheKeywords }}</p>\n  <p><strong>Date:</strong> {{ $now.format('MMMM dd, yyyy') }}</p>\n  \n  <h2>Top Performing Videos</h2>\n  \n  {{#each $json}}\n  <div class=\"video-card {{#if superViral}}super-viral{{/if}}\">\n    {{#if superViral}}<span class=\"super-viral-badge\">⚡ SUPER VIRAL</span>{{/if}}\n    \n    <div class=\"video-title\">{{ platform }} – Video #{{ @index + 1 }}</div>\n    \n    <div class=\"metrics\">\n      <div class=\"metric\">\n        <span class=\"metric-label\">Views:</span>\n        <span class=\"metric-value\">{{ views }}</span>\n      </div>\n      <div class=\"metric\">\n        <span class=\"metric-label\">Likes:</span>\n        <span class=\"metric-value\">{{ likes }}</span>\n      </div>\n      <div class=\"metric\">\n        <span class=\"metric-label\">Engagement:</span>\n        <span class=\"metric-value\">{{ engagementRate }}%</span>\n      </div>\n      <div class=\"metric\">\n        <span class=\"metric-label\">Growth:</span>\n        <span class=\"metric-value\">{{ growthScore }}</span>\n      </div>\n    </div>\n    \n    <div class=\"section\">\n      <div class=\"section-title\">📹 Video Link:</div>\n      <a href=\"{{ videoUrl }}\" class=\"link\" target=\"_blank\">{{ videoUrl }}</a>\n    </div>\n    \n    <div class=\"section\">\n      <div class=\"section-title\">🎯 Visual Hook Analysis:</div>\n      <p>{{ visualHookAnalysis }}</p>\n    </div>\n    \n    <div class=\"section\">\n      <div class=\"section-title\">📊 Trend Summary:</div>\n      <p>{{ trendSummary }}</p>\n    </div>\n    \n    <div class=\"section\">\n      <div class=\"section-title\">💡 Adaptation Ideas:</div>\n      <p>{{ adaptationIdeas }}</p>\n    </div>\n  </div>\n  {{/each}}\n  \n  <div class=\"footer\">\n    <p>This report was automatically generated by your Viral Content Finder workflow.</p>\n    <p>Review these opportunities and adapt the winning strategies to your content!</p>\n  </div>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "3df6fd7e-0a2f-4838-a9de-1cfd0cad5a70",
+      "name": "Send Daily Digest Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1520,
+        1264
+      ],
+      "webhookId": "362197b0-bdf6-4327-af77-314b3e89feb9",
+      "credentials": {
+        "googleApi": {
+          "id": "bFhfsO5dYdRTOWJu",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "<__PLACEHOLDER_VALUE__Slack channel ID or name__>"
+        },
+        "text": "=🚀 SUPER VIRAL ALERT!\n\nPlatform: {{ $json.platform }}\nViews: {{ $json.views.toLocaleString() }}\nEngagement Rate: {{ Math.round($json.engagement_rate * 10000) / 100 }}%\n\nLink: {{ $json.video_url }}\n\nWhy it's blowing up: {{ $('Analyze Trend & Adaptation (GPT-4)').first().json.output?.why_it_works }}\n\nTop Adaptation Idea: {{ $('Analyze Trend & Adaptation (GPT-4)').first().json.output?.adaptation_ideas?.[0] }}",
+        "otherOptions": {}
+      },
+      "id": "c7d6b323-4098-4d84-aa56-fd1886bb2768",
+      "name": "Send Super Viral Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -2432,
+        1024
+      ],
+      "webhookId": "c2758c19-6a20-4337-aed9-53771d361cd3",
+      "credentials": {
+        "slackApi": {
+          "id": "aV8dmp4JPT96dIse",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Transform aggregated data into email-friendly format\nconst videos = $input.all();\n\n// Sort by engagement rate and growth score\nconst sortedVideos = videos.map(item => {\n  const data = item.json;\n  const engagementRate = data.engagement_rate || 0;\n  const ageHours = data.age_hours || 1;\n  \n  // Calculate growth score (engagement rate / age in hours)\n  const growthScore = Math.round((engagementRate / ageHours) * 10000) / 100;\n  \n  // Extract AI analysis data from agent node outputs\n  // Agent nodes store their output in $json.output as a JSON string or object\n  let visualAnalysis = {};\n  let trendAnalysis = {};\n  \n  try {\n    // Try to parse visual analysis output\n    if (data.visual_analysis) {\n      visualAnalysis = typeof data.visual_analysis === 'string' ? JSON.parse(data.visual_analysis) : data.visual_analysis;\n    }\n    // Try to parse trend analysis output\n    if (data.trend_analysis) {\n      trendAnalysis = typeof data.trend_analysis === 'string' ? JSON.parse(data.trend_analysis) : data.trend_analysis;\n    }\n  } catch (e) {\n    console.log('Error parsing AI output:', e);\n  }\n  \n  return {\n    json: {\n      platform: data.platform,\n      videoUrl: data.video_url,\n      author: data.author,\n      views: data.views,\n      likes: data.likes,\n      comments: data.comments,\n      shares: data.shares,\n      engagementRate: Math.round(engagementRate * 10000) / 100,\n      growthScore: growthScore,\n      superViral: data.super_viral || false,\n      visualHookAnalysis: visualAnalysis.visual_hook || 'N/A',\n      mainEmotion: visualAnalysis.main_emotion || 'N/A',\n      formattingPattern: visualAnalysis.formatting_pattern || 'N/A',\n      trendSummary: trendAnalysis.summary || 'N/A',\n      whyItWorks: trendAnalysis.why_it_works || 'N/A',\n      trendType: trendAnalysis.trend_type || 'N/A',\n      adaptationIdeas: Array.isArray(trendAnalysis.adaptation_ideas) ? trendAnalysis.adaptation_ideas.join('; ') : 'N/A',\n      hookExamples: Array.isArray(trendAnalysis.hook_examples) ? trendAnalysis.hook_examples.join('; ') : 'N/A',\n      postingAngles: Array.isArray(trendAnalysis.posting_angles) ? trendAnalysis.posting_angles.join('; ') : 'N/A'\n    }\n  };\n}).sort((a, b) => b.json.growthScore - a.json.growthScore);\n\n// Return top 5-10 videos\nreturn sortedVideos.slice(0, 10);"
+      },
+      "id": "ca1c570e-ff9f-40c2-9e04-1a0764d0d796",
+      "name": "Prepare Email Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1712,
+        1264
+      ]
+    },
+    {
+      "parameters": {
+        "content": "\n## 📌 Workflow Configuration Checklist\n\nBefore running this workflow, make sure to configure these important nodes:\n\n- **Workflow Configuration**  \n  Set your API keys, thresholds, and main workflow settings.\n\n- **Search Config**  \n  Choose your keywords, hashtags, language, and time range for content discovery.\n\n- **Scrape TikTok** & **Scrape Instagram**  \n  Add your API credentials and endpoints for each platform.\n\n- **Save to Google Sheets**  \n  Connect your Google account and select the destination spreadsheet.\n\n- **Send Daily Digest Email**  \n  Enter the recipient email address and adjust the message if needed.\n\n- **Send Super Viral Alert**  \n  (Optional) Set up your Slack webhook for instant notifications.\n\n> ⚡ Double-check all credentials and test each integration before activating the workflow.",
+        "height": 1264,
+        "width": 3360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4704,
+        256
+      ],
+      "id": "5fe90b14-951a-4e49-9bee-55e365757f30",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Trigger (08:00)": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Search Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Config": {
+      "main": [
+        [
+          {
+            "node": "Scrape TikTok",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Scrape Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape TikTok": {
+      "main": [
+        [
+          {
+            "node": "Normalize TikTok Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Instagram": {
+      "main": [
+        [
+          {
+            "node": "Normalize Instagram Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize TikTok Results": {
+      "main": [
+        [
+          {
+            "node": "Combine Platforms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Instagram Results": {
+      "main": [
+        [
+          {
+            "node": "Combine Platforms",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combine Platforms": {
+      "main": [
+        [
+          {
+            "node": "Filter High-Growth Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4 Vision Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Visual Hook (GPT-4 Vision)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Visual Hook (GPT-4 Vision)": {
+      "main": [
+        [
+          {
+            "node": "Analyze Trend & Adaptation (GPT-4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4 Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Trend & Adaptation (GPT-4)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Trend & Adaptation (GPT-4)": {
+      "main": [
+        [
+          {
+            "node": "Check Super Viral Threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Super Viral Threshold": {
+      "main": [
+        [
+          {
+            "node": "Mark as Super Viral",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Normal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Super Viral": {
+      "main": [
+        [
+          {
+            "node": "Merge Viral Flags",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Super Viral Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Normal": {
+      "main": [
+        [
+          {
+            "node": "Merge Viral Flags",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Viral Flags": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Select Top 5-10 Videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Top 5-10 Videos": {
+      "main": [
+        [
+          {
+            "node": "Prepare Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Email Data": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Digest Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High-Growth Videos": {
+      "main": [
+        [
+          {
+            "node": "Analyze Visual Hook (GPT-4 Vision)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "cb7e06b1-42c7-4149-958d-4ae042c63f8e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c2d487d22eb340f8f43c55ff61f8c69909cb5c9301a99030a4a4ab5908a80ca6"
+  },
+  "id": "1SDZO2lDsXdO5QLV",
+  "tags": []
+}
